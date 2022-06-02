@@ -1,51 +1,43 @@
-// import { AppDataSource } from "../../data-source";
-// import { Buy } from "../../entities/buy.entity";
-// import { Cart } from "../../entities/cart.entity";
-// import { Dvds } from "../../entities/dvd.entity";
-// import { User } from "../../entities/user.entity";
-// import { AppError } from "../../errors/appError";
+import { AppDataSource } from "../../data-source";
+import { Cart } from "../../entities/cart.entity";
+import { Dvds } from "../../entities/dvd.entity";
+import { User } from "../../entities/user.entity";
+import { AppError } from "../../errors/appError";
+import { userOrderOff, userWOPassword } from "../../utils";
 
-// const dvdBuyService = async (item: string) => {
-//   const cartRespository = AppDataSource.getRepository(Cart);
-//   const userRespository = AppDataSource.getRepository(User);
-//   const buyRespository = AppDataSource.getRepository(Buy);
+const dvdBuyService = async (
+  qtd: number,
+  itemId: string,
+  userEmail: string
+) => {
+  const cartRepository = AppDataSource.getRepository(Cart);
+  const userRepository = AppDataSource.getRepository(User);
+  const dvdRepository = AppDataSource.getRepository(Dvds);
 
-//   const user = await userRespository.findOne({
-//     where: {
-//       email: item,
-//     },
-//   });
-//   const cart = await cartRespository.findOne({
-//     where: {
-//       id: user?.cart.id,
-//     },
-//   });
+  const dvd = await dvdRepository.findOne({ where: { id: itemId } });
+  const user = await userRepository.findOne({ where: { email: userEmail } });
 
-//   if (cart && user) {
-//     if (cart.dvds.length === 0) {
-//       throw new AppError(400, "Cart is empty");
-//     }
+  if (!dvd) {
+    throw new AppError(404, "dvd not found");
+  }
+  if (dvd.stock.quantity < qtd) {
+    throw new AppError(
+      422,
+      `"current stock: ${dvd.stock.quantity}, received demand 400"`
+    );
+  }
+  const userWOP = userOrderOff(userWOPassword(user));
 
-//     const buy = new Buy();
-//     buy.user = user;
-//     buy.products = cart.dvds;
-//     buy.total = cart.total;
+  const cart = new Cart();
+  cart.paid = false;
+  cart.total = dvd.stock.price * qtd;
+  cart.newUser = userWOP;
+  cart.dvd = [dvd];
 
-//     buyRespository.create(buy);
-//     await buyRespository.save(buy);
+  cartRepository.create(cart);
+  await cartRepository.save(cart);
 
-//     cart.dvds = [];
-//     cart.total = 0;
-//     await cartRespository.save(cart);
+  return cart;
+};
 
-//     const newBuy = buyRespository.find({
-//       where: {
-//         id: buy.id,
-//       },
-//     });
-
-//     return newBuy;
-//   }
-// };
-
-// export default dvdBuyService;
+export default dvdBuyService;

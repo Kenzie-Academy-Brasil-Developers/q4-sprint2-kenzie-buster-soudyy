@@ -1,18 +1,11 @@
-import {
-  Column,
-  Entity,
-  PrimaryColumn,
-  OneToOne,
-  JoinColumn,
-  OneToMany,
-} from "typeorm";
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 import { v4 as uuid } from "uuid";
 import { Cart } from "./cart.entity";
 import { Dvds } from "./dvd.entity";
 
 @Entity("users")
 export class User {
-  @PrimaryColumn("uuid")
+  @PrimaryGeneratedColumn("uuid")
   readonly id?: string;
 
   @Column({ nullable: false })
@@ -27,16 +20,8 @@ export class User {
   @Column({ default: false })
   isAdm?: boolean;
 
-  // @OneToMany((type) => Dvds, (dvd) => dvd.owner, {
-  //   eager: true,
-  // })
-  // dvds: Dvds[];
-
-  // @OneToOne((type) => Cart, {
-  //   eager: true,
-  // })
-  // @JoinColumn()
-  // cart: Cart;
+  @OneToOne(() => Cart, (cart) => cart.newUser, { eager: true })
+  orders: Cart[];
 
   constructor() {
     if (!this.id) {

@@ -1,11 +1,29 @@
 import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
+import { User } from "../entities/user.entity";
 import { AppError } from "../errors/appError";
+import * as dotenv from "dotenv";
+
+dotenv.config();
 
 export const isAdmAuth = (req: Request, res: Response, next: NextFunction) => {
-  //   if (!req.decoded.isAdm) {
-  //     throw new AppError(401, "Permission denied");
-  //   }
+  const token = req.headers.authorization;
 
-  return next();
+  if (!token) {
+    throw new AppError(400, "Missing authorization token.");
+  }
+
+  return jwt.verify(token, process.env.JWT_SECRET, (err, decoded: any) => {
+    if (err) {
+      return res.status(401).json({ message: "Invalid Token." });
+    }
+    req.decoded = decoded as User;
+    req.userEmail = decoded.email;
+
+    if (!decoded.isAdm) {
+      throw new AppError(401, "missing admin permision");
+    }
+    return next();
+  });
 };
 export default isAdmAuth;

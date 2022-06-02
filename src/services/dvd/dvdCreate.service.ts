@@ -15,13 +15,19 @@ const dvdCreateService = async ({
   const dvd = new Dvds();
   dvd.name = name;
   dvd.duration = duration;
-  dvd.stock.price = price;
-  dvd.stock.quantity = quantity;
+
+  const stock = new Stock();
+  stock.price = price;
+  stock.quantity = quantity;
+
+  stockRepository.create(stock);
+  await stockRepository.save(stock);
+
+  dvd.stock = stock;
 
   dvdRepository.create(dvd);
   await dvdRepository.save(dvd);
-
-  return dvd.stock;
+  return { dvds: [dvd] };
 };
 
 export default dvdCreateService;

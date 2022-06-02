@@ -4,8 +4,7 @@ import dvdCreateService from "../../services/dvd/dvdCreate.service";
 
 const dvdCreateController = async (req: Request, res: Response) => {
   try {
-    const { name, duration, price, quantity } = req.body;
-
+    const { name, duration, price, quantity } = req.body.dvds[0];
     const dvd = await dvdCreateService({ name, duration, price, quantity });
 
     return res.status(201).send(dvd);
