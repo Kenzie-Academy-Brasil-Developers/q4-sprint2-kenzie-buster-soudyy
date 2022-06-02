@@ -20,9 +20,6 @@ export const isAdmAuth = (req: Request, res: Response, next: NextFunction) => {
     req.decoded = decoded as User;
     req.userEmail = decoded.email;
 
-    if (!decoded.isAdm) {
-      throw new AppError(401, "missing admin permision");
-    }
     return next();
   });
 };

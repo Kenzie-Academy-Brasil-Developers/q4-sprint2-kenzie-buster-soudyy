@@ -1,15 +1,14 @@
 import { AppDataSource } from "../../data-source";
+import { Cart } from "../../entities/cart.entity";
 import { User } from "../../entities/user.entity";
 import { AppError } from "../../errors/appError";
 import { IUserCreate } from "../../interfaces/user";
 import bcrypt from "bcrypt";
 import { userWOPassword } from "../../utils";
-const userCreateService = async ({
-  name,
-  email,
-  password,
-  isAdm,
-}: IUserCreate) => {
+const userCreateService = async (
+  { name, email, password, isAdm }: IUserCreate,
+  userEmail: string
+) => {
   const missingData = [];
   if (!email) {
     missingData.push("email");
@@ -30,6 +29,12 @@ const userCreateService = async ({
 
   const emailAlreadyExists = users.find((user) => user.email === email);
 
+  const userAdm = await userRespository.findOne({
+    where: { email: userEmail },
+  });
+  if (!userAdm.isAdm) {
+    throw new AppError(401, "Permission denied");
+  }
   if (emailAlreadyExists) {
     throw new AppError(409, `Key (email)=(${email}) already exists.`);
   }
